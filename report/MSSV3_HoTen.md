@@ -4,23 +4,25 @@
 
 ## 1. Thông tin cá nhân
 
-| Thông tin | Nội dung |
-| --- | --- |
-| Họ và tên | [Họ và tên] |
-| MSSV | [MSSV] |
-| Khóa/Lớp | K4-L3-DAY10 |
-| Vai trò | RAG & Vector Index |
-| Repository | https://github.com/Munfond/K4-L3A-Day10-Data-Pipeline-Data-Observability |
-| Ngày hoàn thành | 2026-09-25 |
+
+| Thông tin         | Nội dung                                                                |
+| ------------------ | ------------------------------------------------------------------------ |
+| Họ và tên       | Nguyễn Hoàng Duy                                                       |
+| MSSV               | 2A202602751                                                              |
+| Khóa/Lớp         | K4-L3-DAY10                                                              |
+| Vai trò           | RAG & Vector Index                                                       |
+| Repository         | https://github.com/Munfond/K4-L3A-Day10-Data-Pipeline-Data-Observability |
+| Ngày hoàn thành | 2026-09-25                                                               |
 
 ## 2. Phạm vi sở hữu
 
-| Module/deliverable | Input | Output | Trạng thái |
-| --- | --- | --- | --- |
-| src/retrieval/embeddings.py | Tên model từ Settings.embedding_model và văn bản cần nhúng | Vector list[float] đã chuẩn hóa; model được cache theo tên | Hoàn thành |
-| src/retrieval/index.py | Clean DataFrame có schema paper và text_for_embedding | ChromaDB persistent index, manifest trong data/embeddings/, kết quả tìm kiếm có metadata | Hoàn thành |
-| Ba collection ChromaDB | Baseline/corrupted/repaired embedding manifest | papers-baseline, papers-corrupted, papers-repaired | Hoàn thành trong contract của index |
-| Test retrieval | Fake SentenceTransformer và ChromaDB tạm | 6 test kiểm tra build/search/load/idempotent behavior | Hoàn thành |
+
+| Module/deliverable          | Input                                                             | Output                                                                                        | Trạng thái                           |
+| --------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------- |
+| src/retrieval/embeddings.py | Tên model từ Settings.embedding_model và văn bản cần nhúng | Vector list[float] đã chuẩn hóa; model được cache theo tên                            | Hoàn thành                           |
+| src/retrieval/index.py      | Clean DataFrame có schema paper và text_for_embedding           | ChromaDB persistent index, manifest trong data/embeddings/, kết quả tìm kiếm có metadata | Hoàn thành                           |
+| Ba collection ChromaDB      | Baseline/corrupted/repaired embedding manifest                    | papers-baseline, papers-corrupted, papers-repaired                                            | Hoàn thành trong contract của index |
+| Test retrieval              | Fake SentenceTransformer và ChromaDB tạm                        | 6 test kiểm tra build/search/load/idempotent behavior                                        | Hoàn thành                           |
 
 ## 3. Kết quả kỹ thuật
 
@@ -38,18 +40,16 @@
 
 Luồng upstream tạo clean DataFrame và cột text_for_embedding. Pipeline gọi:
 
-    baseline = LocalEmbeddingIndex.build(
-        clean_df,
-        settings,
-        settings.paths.embeddings_json,
-    )
-
+baseline = LocalEmbeddingIndex.build(
+clean_df,
+settings,
+settings.paths.embeddings_json,
+)
 Corrupted và repaired flow dùng lần lượt settings.paths.corrupted_embeddings_json và settings.paths.repaired_embeddings_json. Mỗi manifest ghi backend, model, persist path, collection name và danh sách document/metadata để LocalEmbeddingIndex.load() mở lại index.
 
 ## 5. Cách xác minh
 
-    .\.venv\Scripts\python.exe -m pytest tests\test_retrieval_index.py -q --basetemp=.pytest-tmp
-
+.\.venv\Scripts\python.exe -m pytest tests\test_retrieval_index.py -q --basetemp=.pytest-tmp
 Kết quả thực tế: 6 passed.
 
 Các test đã xác minh:
@@ -65,9 +65,8 @@ Các test đã xác minh:
 
 Chưa chạy được baseline end-to-end trong commit này vì crossref.py, cleaning.py, testset.py và các pipeline orchestration vẫn là phần việc TODO của các owner khác. Vì vậy chưa ghi số liệu retrieval_hit_rate, mean_token_f1 hoặc số lượng 24 document như một kết quả đã chạy. Khi upstream hoàn thành, cần chạy lại:
 
-    .\.venv\Scripts\python.exe script\run_phase1.py
-    .\.venv\Scripts\python.exe script\run_corruption_flow.py
-
+.\.venv\Scripts\python.exe script\run_phase1.py
+.\.venv\Scripts\python.exe script\run_corruption_flow.py
 và đối chiếu các manifest/collection với data/results/ và data/reports/.
 
 ## 7. Quyết định kỹ thuật
@@ -79,7 +78,7 @@ và đối chiếu các manifest/collection với data/results/ và data/reports
 
 ## 8. Cam kết
 
-- [x] Phần code và test trong phạm vi RAG/vector index đã được xác minh.
-- [x] Không thay đổi crossref.py, cleaning.py, testset.py, quality.py hoặc pipeline orchestration.
-- [x] Không đưa API key, token hay nội dung .env vào code/report.
-- [ ] Cần thay [Họ và tên], [MSSV] và đổi tên file trước khi nộp.
+- [X]  Phần code và test trong phạm vi RAG/vector index đã được xác minh.
+- [X]  Không thay đổi crossref.py, cleaning.py, testset.py, quality.py hoặc pipeline orchestration.
+- [X]  Không đưa API key, token hay nội dung .env vào code/report.
+- [ ]  Cần thay [Họ và tên], [MSSV] và đổi tên file trước khi nộp.
