@@ -7,7 +7,7 @@
 | Họ và tên | Vũ Quang Tiến |
 | MSSV | 2A202602872 |
 | Khóa/Lớp | K4 |
-| Tên nhóm | Chưa cập nhật |
+| Tên nhóm | Succulent |
 | Vai trò chính | Observability & Evaluation |
 | Repository | https://github.com/Munfond/K4-L3A-Day10-Data-Pipeline-Data-Observability |
 | Ngày hoàn thành | 2026-09-25 |

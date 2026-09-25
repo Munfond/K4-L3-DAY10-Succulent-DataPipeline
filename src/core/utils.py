@@ -50,3 +50,20 @@ def compact_join(items: Iterable[str], sep: str = ", ") -> str:
 def first_sentence(text: str) -> str:
     chunks = re.split(r"(?<=[.!?])\s+", normalize_whitespace(text))
     return chunks[0] if chunks else normalize_whitespace(text)
+
+
+def ensure_artifact_dirs(paths: Any) -> None:
+    """Ensure all required artifact directories exist in the project."""
+    dirs = [
+        paths.project_dir / "data" / "raw",
+        paths.project_dir / "data" / "clean",
+        paths.project_dir / "data" / "chroma",
+        paths.project_dir / "data" / "embeddings",
+        paths.project_dir / "data" / "eval",
+        paths.project_dir / "data" / "quality",
+        paths.project_dir / "data" / "reports",
+        paths.project_dir / "data" / "results",
+    ]
+    for d in dirs:
+        d.mkdir(parents=True, exist_ok=True)
+

@@ -1,0 +1,10 @@
+{
+  "generated_on": "2026-09-25",
+  "freshness_threshold_days": 180,
+  "latest_published": "2026-07-22",
+  "oldest_published": "2026-03-28",
+  "stale_rows": 1,
+  "total_rows": 24,
+  "stale_ratio": 0.041666666666666664,
+  "is_fresh": true
+}

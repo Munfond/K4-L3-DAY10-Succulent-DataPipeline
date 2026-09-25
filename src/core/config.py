@@ -41,6 +41,10 @@ class Paths:
     repaired_answers: Path
     comparison_report: Path
 
+    @property
+    def test_set_json(self) -> Path:
+        return self.eval_testset
+
 
 @dataclass(frozen=True)
 class Settings:
@@ -76,7 +80,7 @@ def load_settings(project_dir: Path | None = None) -> Settings:
     source_from_date = (datetime.now(UTC).date() - timedelta(days=freshness_threshold_days)).isoformat()
 
     load_dotenv(workspace / ".env")
-    load_dotenv(root / ".env", override=False)
+    load_dotenv(root / ".env", override=True)
 
     data_dir = root / "data"
     paths = Paths(
@@ -123,7 +127,7 @@ def load_settings(project_dir: Path | None = None) -> Settings:
         ollama_base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
         custom_llm_api_key=os.getenv("CUSTOM_LLM_API_KEY"),
         custom_llm_base_url=os.getenv("CUSTOM_LLM_BASE_URL"),
-        embedding_model="sentence-transformers/all-MiniLM-L6-v2",
+        embedding_model=os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2"),
         baseline_collection_name="papers-baseline",
         corrupted_collection_name="papers-corrupted",
         repaired_collection_name="papers-repaired",

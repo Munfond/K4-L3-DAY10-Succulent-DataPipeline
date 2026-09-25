@@ -1,6 +1,7 @@
 from .config import Paths, Settings, load_settings, normalized_provider, require_llm_credentials
 from .utils import (
     compact_join,
+    ensure_artifact_dirs,
     ensure_parent,
     first_sentence,
     normalize_whitespace,
