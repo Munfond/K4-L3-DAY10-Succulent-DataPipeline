@@ -22,6 +22,20 @@ class SearchResult:
 
 
 class LocalEmbeddingIndex:
+    _REQUIRED_COLUMNS = frozenset(
+        {
+            "paper_id",
+            "title",
+            "summary",
+            "authors_joined",
+            "categories_joined",
+            "published",
+            "abs_url",
+            "pdf_url",
+            "text_for_embedding",
+        }
+    )
+
     def __init__(
         self,
         settings: Settings,
@@ -37,29 +51,44 @@ class LocalEmbeddingIndex:
         self.embedding_model = MiniLMEmbeddings(settings.embedding_model)
         self.client = chromadb.PersistentClient(path=str(persist_path))
         self.collection = self.client.get_collection(name=collection_name)
-        self.documents_by_paper_id = {document["paper_id"].lower(): document for document in documents}
-        self.documents_by_title = {document["title"].lower(): document for document in documents}
+        self.documents_by_paper_id = {
+            str(document["paper_id"]).strip().casefold(): document for document in documents
+        }
+        self.documents_by_title = {
+            str(document["title"]).strip().casefold(): document for document in documents
+        }
 
     @staticmethod
     def _build_documents(df: pd.DataFrame) -> list[dict[str, Any]]:
+        if df.empty:
+            raise ValueError("the index requires at least one document.")
+        missing_columns = sorted(LocalEmbeddingIndex._REQUIRED_COLUMNS.difference(df.columns))
+        if missing_columns:
+            raise ValueError(f"missing required columns: {', '.join(missing_columns)}")
+
         records = df.to_dict(orient="records")
         documents: list[dict[str, Any]] = []
         for index, row in enumerate(records):
+            paper_id = str(row["paper_id"]).strip()
+            title = str(row["title"]).strip()
+            content = str(row["text_for_embedding"]).strip()
+            if not paper_id or not title or not content:
+                raise ValueError(f"row {index} has an empty paper_id, title, or text_for_embedding.")
             documents.append(
                 {
-                    "record_id": f"{row['paper_id']}::{index}",
-                    "paper_id": row["paper_id"],
-                    "title": row["title"],
-                    "content": row["text_for_embedding"],
+                    "record_id": f"{paper_id}::{index}",
+                    "paper_id": paper_id,
+                    "title": title,
+                    "content": content,
                     "metadata": {
-                        "paper_id": row["paper_id"],
-                        "title": row["title"],
-                        "published": row["published"],
-                        "authors_joined": row["authors_joined"],
-                        "categories_joined": row["categories_joined"],
-                        "summary": row["summary"],
-                        "abs_url": row["abs_url"],
-                        "pdf_url": row["pdf_url"],
+                        "paper_id": paper_id,
+                        "title": title,
+                        "published": str(row["published"]),
+                        "authors_joined": str(row["authors_joined"]),
+                        "categories_joined": str(row["categories_joined"]),
+                        "summary": str(row["summary"]),
+                        "abs_url": str(row["abs_url"]),
+                        "pdf_url": str(row["pdf_url"]),
                     },
                 }
             )
@@ -139,10 +168,17 @@ class LocalEmbeddingIndex:
         )
 
     def search(self, query: str, top_k: int | None = None) -> list[SearchResult]:
+        requested_top_k = self.settings.top_k if top_k is None else top_k
+        if isinstance(requested_top_k, bool) or not isinstance(requested_top_k, int) or requested_top_k <= 0:
+            raise ValueError("top_k must be a positive integer.")
+        document_count = self.collection.count()
+        if document_count == 0:
+            return []
+
         query_embedding = self.embedding_model.embed_query(query)
         results = self.collection.query(
             query_embeddings=[query_embedding],
-            n_results=top_k or self.settings.top_k,
+            n_results=min(requested_top_k, document_count),
             include=["documents", "metadatas", "distances"],
         )
         ids = results.get("ids", [[]])[0]
@@ -154,11 +190,12 @@ class LocalEmbeddingIndex:
         for record_id, content, metadata, distance in zip(ids, documents, metadatas, distances, strict=False):
             if not record_id or not metadata or not content:
                 continue
+            score = max(0.0, min(1.0, 1.0 - float(distance or 0.0)))
             scored.append(
                 SearchResult(
                     paper_id=str(metadata["paper_id"]),
                     title=str(metadata["title"]),
-                    score=max(0.0, 1.0 - float(distance or 0.0)),
+                    score=score,
                     content=str(content),
                     metadata=dict(metadata),
                 )
@@ -166,7 +203,9 @@ class LocalEmbeddingIndex:
         return scored
 
     def lookup(self, value: str) -> dict[str, Any] | None:
-        needle = value.strip().lower()
+        if not isinstance(value, str):
+            return None
+        needle = value.strip().casefold()
         if needle in self.documents_by_paper_id:
             return self.documents_by_paper_id[needle]
         if needle in self.documents_by_title:
